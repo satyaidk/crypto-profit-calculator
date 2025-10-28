@@ -1,3 +1,1 @@
 # Crypto profit calculator
-
-

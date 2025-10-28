@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { Navbar } from "@/components/navbar"
-import { ProfitCalculator } from "@/components/profit-calculator"
+import { PreBuyCalculator } from "@/components/pre-buy-calculator"
 import { Card } from "@/components/ui/card"
 
-export default function Home() {
+export default function PreBuyPage() {
   const [isConnected, setIsConnected] = useState(false)
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
@@ -43,7 +43,7 @@ export default function Home() {
                   <p className="text-xs text-muted-foreground mb-2 font-semibold">Connected Wallet</p>
                   <p className="text-foreground font-mono text-sm break-all font-semibold">{walletAddress}</p>
                 </div>
-                <ProfitCalculator />
+                <PreBuyCalculator />
               </div>
             </Card>
           </div>
@@ -52,7 +52,7 @@ export default function Home() {
             <Card className="bg-card border-border">
               <div className="p-8 text-center space-y-4">
                 <div className="text-5xl">🔐</div>
-                <p className="text-muted-foreground">Connect your wallet to start calculating profits</p>
+                <p className="text-muted-foreground">Connect your wallet to start planning your purchases</p>
                 <p className="text-xs text-muted-foreground">Use the Connect button in the top right to get started</p>
               </div>
             </Card>

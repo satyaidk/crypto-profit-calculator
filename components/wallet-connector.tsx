@@ -6,13 +6,15 @@ import { Button } from "@/components/ui/button"
 interface WalletConnectorProps {
   onConnect: (address: string) => void
   onDisconnect: () => void
+  compact?: boolean
 }
 
-export function WalletConnector({ onConnect, onDisconnect }: WalletConnectorProps) {
+export function WalletConnector({ onConnect, onDisconnect, compact = false }: WalletConnectorProps) {
   const [isConnected, setIsConnected] = useState(false)
   const [address, setAddress] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isSigningIn, setIsSigningIn] = useState(false)
 
   // Check if wallet is already connected on mount
   useEffect(() => {
@@ -54,11 +56,18 @@ export function WalletConnector({ onConnect, onDisconnect }: WalletConnectorProp
 
       if (accounts.length > 0) {
         const userAddress = accounts[0]
+        setIsSigningIn(true)
+
+        // Simulate signing process
+        await new Promise((resolve) => setTimeout(resolve, 1500))
+
         setAddress(userAddress)
         setIsConnected(true)
+        setIsSigningIn(false)
         onConnect(userAddress)
       }
     } catch (err: any) {
+      setIsSigningIn(false)
       if (err.code === 4001) {
         setError("Connection rejected by user")
       } else {
@@ -77,37 +86,76 @@ export function WalletConnector({ onConnect, onDisconnect }: WalletConnectorProp
     onDisconnect()
   }
 
+  if (isSigningIn) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 p-6">
+        <div className="relative w-16 h-16">
+          <div className="absolute inset-0 border-4 border-border rounded-full"></div>
+          <div className="absolute inset-0 border-4 border-transparent border-t-primary rounded-full animate-spin-slow"></div>
+        </div>
+        <div className="text-center">
+          <p className="font-semibold text-foreground">Confirming Transaction</p>
+          <p className="text-sm text-muted-foreground">Please sign in your wallet...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (compact) {
+    return (
+      <div className="flex items-center gap-2">
+        {isConnected && address ? (
+          <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-secondary rounded-lg border border-border">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-xs font-mono text-muted-foreground">
+                {address.slice(0, 6)}...{address.slice(-4)}
+              </span>
+            </div>
+            <Button onClick={disconnectWallet} variant="outline" className="text-xs sm:text-sm bg-transparent">
+              Disconnect
+            </Button>
+          </div>
+        ) : (
+          <Button
+            onClick={connectWallet}
+            disabled={isLoading}
+            className="text-xs sm:text-sm bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            {isLoading ? "Connecting..." : "Connect"}
+          </Button>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
       {isConnected && address ? (
         <div className="space-y-4">
-          <div className="p-3 bg-green-900/20 border border-green-700 rounded-lg">
-            <p className="text-sm text-green-400 mb-2">✓ Wallet Connected</p>
-            <p className="text-xs text-green-300 font-mono break-all">{address}</p>
+          <div className="p-4 bg-secondary border border-border rounded-lg">
+            <p className="text-sm text-muted-foreground mb-2">Connected Wallet</p>
+            <p className="text-sm font-mono text-foreground break-all font-semibold">{address}</p>
           </div>
-          <Button
-            onClick={disconnectWallet}
-            variant="outline"
-            className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 bg-transparent"
-          >
+          <Button onClick={disconnectWallet} variant="outline" className="w-full bg-transparent">
             Disconnect Wallet
           </Button>
         </div>
       ) : (
         <div className="space-y-4">
           {error && (
-            <div className="p-3 bg-red-900/20 border border-red-700 rounded-lg">
-              <p className="text-sm text-red-400">{error}</p>
+            <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg">
+              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
             </div>
           )}
           <Button
             onClick={connectWallet}
             disabled={isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
           >
             {isLoading ? "Connecting..." : "Connect Wallet"}
           </Button>
-          <p className="text-xs text-slate-500 text-center">Supports MetaMask and Web3-compatible wallets</p>
+          <p className="text-xs text-muted-foreground text-center">Supports MetaMask and Web3-compatible wallets</p>
         </div>
       )}
     </div>

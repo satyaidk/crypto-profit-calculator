@@ -29,6 +29,7 @@ export function ProfitCalculator() {
   const [result, setResult] = useState<CalculationResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isLoadingPrice, setIsLoadingPrice] = useState(false)
+  const [isCalculating, setIsCalculating] = useState(false)
 
   const [preBuyTargetPrice, setPreBuyTargetPrice] = useState("")
   const [preBuyBudget, setPreBuyBudget] = useState("")
@@ -102,7 +103,7 @@ export function ProfitCalculator() {
     }
   }
 
-  const calculateProfit = () => {
+  const calculateProfit = async () => {
     setError(null)
     setResult(null)
 
@@ -131,6 +132,9 @@ export function ProfitCalculator() {
       return
     }
 
+    setIsCalculating(true)
+    await new Promise((resolve) => setTimeout(resolve, 800))
+
     // Calculate
     const currentValue = holdingsNum * currentPriceNum
     const futureValue = holdingsNum * targetPriceNum
@@ -143,6 +147,7 @@ export function ProfitCalculator() {
       profit,
       percentageGain,
     })
+    setIsCalculating(false)
   }
 
   const calculatePreBuy = () => {
@@ -190,38 +195,47 @@ export function ProfitCalculator() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-slide-up">
       {/* Profit Calculator Section */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-white">📈 Profit Calculator</h2>
+        <div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Profit Calculator</h2>
+          <p className="text-sm text-muted-foreground mt-1">Calculate your potential profits with precision</p>
+        </div>
 
         {/* Input Section */}
         <div className="space-y-4">
           <div>
-            <Label htmlFor="token-name" className="text-slate-300">
+            <Label htmlFor="token-name" className="text-foreground font-semibold">
               Token Name
             </Label>
-            <div className="flex gap-2 mt-2">
+            <div className="flex gap-2 mt-2 flex-col sm:flex-row">
               <Input
                 id="token-name"
-                placeholder="e.g., ethereum, bitcoin"
+                placeholder="e.g., ethereum, bitcoin, solana"
                 value={tokenName}
                 onChange={(e) => setTokenName(e.target.value)}
-                className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
+                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground flex-1"
               />
               <Button
                 onClick={fetchTokenPrice}
                 disabled={isLoadingPrice}
-                variant="outline"
-                className="border-slate-600 text-slate-300 hover:bg-slate-700 whitespace-nowrap bg-transparent"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto"
               >
-                {isLoadingPrice ? "Loading..." : "Fetch Price"}
+                {isLoadingPrice ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin-slow"></div>
+                    Fetching...
+                  </span>
+                ) : (
+                  "Fetch Price"
+                )}
               </Button>
             </div>
           </div>
 
           <div>
-            <Label htmlFor="holdings" className="text-slate-300">
+            <Label htmlFor="holdings" className="text-foreground font-semibold">
               Holdings (Amount)
             </Label>
             <Input
@@ -231,13 +245,13 @@ export function ProfitCalculator() {
               value={holdings}
               onChange={(e) => setHoldings(e.target.value)}
               step="0.0001"
-              className="mt-2 bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
+              className="mt-2 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="current-price" className="text-slate-300">
+              <Label htmlFor="current-price" className="text-foreground font-semibold">
                 Current Price ($)
               </Label>
               <Input
@@ -247,12 +261,12 @@ export function ProfitCalculator() {
                 value={currentPrice}
                 onChange={(e) => setCurrentPrice(e.target.value)}
                 step="0.01"
-                className="mt-2 bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
+                className="mt-2 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
 
             <div>
-              <Label htmlFor="target-price" className="text-slate-300">
+              <Label htmlFor="target-price" className="text-foreground font-semibold">
                 Target Price ($)
               </Label>
               <Input
@@ -262,7 +276,7 @@ export function ProfitCalculator() {
                 value={targetPrice}
                 onChange={(e) => setTargetPrice(e.target.value)}
                 step="0.01"
-                className="mt-2 bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
+                className="mt-2 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
           </div>
@@ -270,20 +284,31 @@ export function ProfitCalculator() {
 
         {/* Error Message */}
         {error && (
-          <div className="p-4 bg-red-900/20 border border-red-700 rounded-lg">
-            <p className="text-red-400 text-sm">{error}</p>
+          <div className="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg animate-slide-up">
+            <p className="text-red-600 dark:text-red-400 text-sm font-medium">{error}</p>
           </div>
         )}
 
         {/* Action Buttons */}
-        <div className="flex gap-3">
-          <Button onClick={calculateProfit} className="flex-1 bg-green-600 hover:bg-green-700 text-white">
-            Calculate Profit 🚀
+        <div className="flex gap-3 flex-col sm:flex-row">
+          <Button
+            onClick={calculateProfit}
+            disabled={isCalculating}
+            className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+          >
+            {isCalculating ? (
+              <span className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin-slow"></div>
+                Calculating...
+              </span>
+            ) : (
+              "Calculate Profit"
+            )}
           </Button>
           <Button
             onClick={resetCalculator}
             variant="outline"
-            className="border-slate-600 text-slate-300 hover:bg-slate-700 bg-transparent"
+            className="border-border text-foreground hover:bg-secondary bg-transparent"
           >
             Reset
           </Button>
@@ -291,48 +316,57 @@ export function ProfitCalculator() {
 
         {/* Results Section */}
         {result && (
-          <div className="space-y-3 p-6 bg-slate-700 rounded-lg border border-slate-600">
-            <h3 className="text-lg font-semibold text-white mb-4">📈 Calculation Results</h3>
+          <div className="space-y-4 p-6 bg-secondary border border-border rounded-lg animate-slide-up">
+            <h3 className="text-lg font-bold text-foreground">Calculation Results</h3>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 bg-slate-600 rounded">
-                <p className="text-xs text-slate-400 mb-1">Current Value</p>
-                <p className="text-lg font-bold text-white">${result.currentValue.toFixed(2)}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-4 bg-background border border-border rounded-lg">
+                <p className="text-xs text-muted-foreground mb-2 font-semibold">Current Value</p>
+                <p className="text-2xl font-bold text-foreground">${result.currentValue.toFixed(2)}</p>
               </div>
 
-              <div className="p-3 bg-slate-600 rounded">
-                <p className="text-xs text-slate-400 mb-1">Future Value</p>
-                <p className="text-lg font-bold text-white">${result.futureValue.toFixed(2)}</p>
+              <div className="p-4 bg-background border border-border rounded-lg">
+                <p className="text-xs text-muted-foreground mb-2 font-semibold">Future Value</p>
+                <p className="text-2xl font-bold text-foreground">${result.futureValue.toFixed(2)}</p>
               </div>
 
-              <div className={`p-3 rounded ${result.profit >= 0 ? "bg-green-900/30" : "bg-red-900/30"}`}>
-                <p className="text-xs text-slate-400 mb-1">Profit/Loss</p>
-                <p className={`text-lg font-bold ${result.profit >= 0 ? "text-green-400" : "text-red-400"}`}>
+              <div
+                className={`p-4 rounded-lg border ${result.profit >= 0 ? "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900" : "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900"}`}
+              >
+                <p className="text-xs text-muted-foreground mb-2 font-semibold">Profit/Loss</p>
+                <p
+                  className={`text-2xl font-bold ${result.profit >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                >
                   ${result.profit.toFixed(2)}
                 </p>
               </div>
 
-              <div className={`p-3 rounded ${result.percentageGain >= 0 ? "bg-green-900/30" : "bg-red-900/30"}`}>
-                <p className="text-xs text-slate-400 mb-1">Percentage Gain</p>
-                <p className={`text-lg font-bold ${result.percentageGain >= 0 ? "text-green-400" : "text-red-400"}`}>
+              <div
+                className={`p-4 rounded-lg border ${result.percentageGain >= 0 ? "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900" : "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900"}`}
+              >
+                <p className="text-xs text-muted-foreground mb-2 font-semibold">Percentage Gain</p>
+                <p
+                  className={`text-2xl font-bold ${result.percentageGain >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                >
                   {result.percentageGain.toFixed(2)}%
                 </p>
               </div>
             </div>
 
-            <div className="mt-4 p-3 bg-slate-600 rounded text-sm text-slate-300">
+            <div className="mt-4 p-4 bg-background border border-border rounded-lg text-sm text-foreground">
               <p>
-                If {tokenName} reaches <span className="font-semibold text-white">${targetPrice}</span>, your{" "}
-                <span className="font-semibold text-white">{holdings}</span> tokens will be worth{" "}
-                <span className="font-semibold text-white">${result.futureValue.toFixed(2)}</span>.
+                If <span className="font-semibold">{tokenName}</span> reaches{" "}
+                <span className="font-semibold text-accent">${targetPrice}</span>, your{" "}
+                <span className="font-semibold">{holdings}</span> tokens will be worth{" "}
+                <span className="font-semibold text-accent">${result.futureValue.toFixed(2)}</span>.
               </p>
             </div>
           </div>
         )}
       </div>
 
-      <div className="space-y-6 pt-8 border-t border-slate-600">
-        <h2 className="text-2xl font-bold text-white">🛒 Pre-Buy Calculator</h2>
+      <div className="space-y-6 pt-8 border-t border-border">
+        <h2 className="text-2xl font-bold text-foreground">🛒 Pre-Buy Calculator</h2>
         <p className="text-slate-400 text-sm">
           Plan your purchase before the price drops. See how many tokens you can buy at your target price with your
           budget.
@@ -341,7 +375,7 @@ export function ProfitCalculator() {
         {/* Pre-Buy Input Section */}
         <div className="space-y-4">
           <div>
-            <Label htmlFor="prebuy-target-price" className="text-slate-300">
+            <Label htmlFor="prebuy-target-price" className="text-foreground font-semibold">
               Target Buy Price ($)
             </Label>
             <Input
@@ -351,12 +385,12 @@ export function ProfitCalculator() {
               value={preBuyTargetPrice}
               onChange={(e) => setPreBuyTargetPrice(e.target.value)}
               step="0.01"
-              className="mt-2 bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
+              className="mt-2 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
             />
           </div>
 
           <div>
-            <Label htmlFor="prebuy-budget" className="text-slate-300">
+            <Label htmlFor="prebuy-budget" className="text-foreground font-semibold">
               Budget (USD)
             </Label>
             <Input
@@ -366,7 +400,7 @@ export function ProfitCalculator() {
               value={preBuyBudget}
               onChange={(e) => setPreBuyBudget(e.target.value)}
               step="0.01"
-              className="mt-2 bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
+              className="mt-2 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
             />
           </div>
         </div>
