@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { saveCalculation } from "@/lib/user-storage"
 
 interface CalculationResult {
   currentValue: number
@@ -12,16 +13,9 @@ interface CalculationResult {
   percentageGain: number
 }
 
-interface PreBuyResult {
-  tokensToBuy: number
-  totalCost: number
-  pricePerToken: number
-}
-
 const STORAGE_KEY = "crypto_calculator_inputs"
-const PRE_BUY_STORAGE_KEY = "crypto_prebuy_inputs"
 
-export function ProfitCalculator() {
+export function ProfitCalculator({ walletAddress }: { walletAddress?: string | null }) {
   const [tokenName, setTokenName] = useState("")
   const [holdings, setHoldings] = useState("")
   const [currentPrice, setCurrentPrice] = useState("")
@@ -30,11 +24,7 @@ export function ProfitCalculator() {
   const [error, setError] = useState<string | null>(null)
   const [isLoadingPrice, setIsLoadingPrice] = useState(false)
   const [isCalculating, setIsCalculating] = useState(false)
-
-  const [preBuyTargetPrice, setPreBuyTargetPrice] = useState("")
-  const [preBuyBudget, setPreBuyBudget] = useState("")
-  const [preBuyResult, setPreBuyResult] = useState<PreBuyResult | null>(null)
-  const [preBuyError, setPreBuyError] = useState<string | null>(null)
+  const [saveMessage, setSaveMessage] = useState("")
 
   // Load from local storage on mount
   useEffect(() => {
@@ -50,17 +40,6 @@ export function ProfitCalculator() {
         console.error("Error loading saved data:", err)
       }
     }
-
-    const savedPreBuy = localStorage.getItem(PRE_BUY_STORAGE_KEY)
-    if (savedPreBuy) {
-      try {
-        const data = JSON.parse(savedPreBuy)
-        setPreBuyTargetPrice(data.targetPrice || "")
-        setPreBuyBudget(data.budget || "")
-      } catch (err) {
-        console.error("Error loading pre-buy data:", err)
-      }
-    }
   }, [])
 
   // Save to local storage whenever inputs change
@@ -68,11 +47,6 @@ export function ProfitCalculator() {
     const data = { tokenName, holdings, currentPrice, targetPrice }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
   }, [tokenName, holdings, currentPrice, targetPrice])
-
-  useEffect(() => {
-    const data = { targetPrice: preBuyTargetPrice, budget: preBuyBudget }
-    localStorage.setItem(PRE_BUY_STORAGE_KEY, JSON.stringify(data))
-  }, [preBuyTargetPrice, preBuyBudget])
 
   const fetchTokenPrice = async () => {
     if (!tokenName.trim()) {
@@ -150,30 +124,19 @@ export function ProfitCalculator() {
     setIsCalculating(false)
   }
 
-  const calculatePreBuy = () => {
-    setPreBuyError(null)
-    setPreBuyResult(null)
+  const handleSaveCalculation = () => {
+    if (!walletAddress || !result) return
 
-    const targetPriceNum = Number.parseFloat(preBuyTargetPrice)
-    const budgetNum = Number.parseFloat(preBuyBudget)
+    saveCalculation(
+      walletAddress,
+      "profit",
+      { tokenName, holdings, currentPrice, targetPrice },
+      result,
+      `${tokenName} - ${new Date().toLocaleDateString()}`,
+    )
 
-    if (isNaN(targetPriceNum) || targetPriceNum <= 0) {
-      setPreBuyError("Please enter a valid target buy price")
-      return
-    }
-
-    if (isNaN(budgetNum) || budgetNum <= 0) {
-      setPreBuyError("Please enter a valid budget amount")
-      return
-    }
-
-    const tokensToBuy = budgetNum / targetPriceNum
-
-    setPreBuyResult({
-      tokensToBuy,
-      totalCost: budgetNum,
-      pricePerToken: targetPriceNum,
-    })
+    setSaveMessage("Calculation saved to your profile!")
+    setTimeout(() => setSaveMessage(""), 3000)
   }
 
   const resetCalculator = () => {
@@ -184,14 +147,6 @@ export function ProfitCalculator() {
     setResult(null)
     setError(null)
     localStorage.removeItem(STORAGE_KEY)
-  }
-
-  const resetPreBuy = () => {
-    setPreBuyTargetPrice("")
-    setPreBuyBudget("")
-    setPreBuyResult(null)
-    setPreBuyError(null)
-    localStorage.removeItem(PRE_BUY_STORAGE_KEY)
   }
 
   return (
@@ -361,101 +316,21 @@ export function ProfitCalculator() {
                 <span className="font-semibold text-accent">${result.futureValue.toFixed(2)}</span>.
               </p>
             </div>
-          </div>
-        )}
-      </div>
 
-      <div className="space-y-6 pt-8 border-t border-border">
-        <h2 className="text-2xl font-bold text-foreground">🛒 Pre-Buy Calculator</h2>
-        <p className="text-slate-400 text-sm">
-          Plan your purchase before the price drops. See how many tokens you can buy at your target price with your
-          budget.
-        </p>
-
-        {/* Pre-Buy Input Section */}
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="prebuy-target-price" className="text-foreground font-semibold">
-              Target Buy Price ($)
-            </Label>
-            <Input
-              id="prebuy-target-price"
-              type="number"
-              placeholder="e.g., 175 (price you want to buy at)"
-              value={preBuyTargetPrice}
-              onChange={(e) => setPreBuyTargetPrice(e.target.value)}
-              step="0.01"
-              className="mt-2 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="prebuy-budget" className="text-foreground font-semibold">
-              Budget (USD)
-            </Label>
-            <Input
-              id="prebuy-budget"
-              type="number"
-              placeholder="e.g., 150 (amount you want to spend)"
-              value={preBuyBudget}
-              onChange={(e) => setPreBuyBudget(e.target.value)}
-              step="0.01"
-              className="mt-2 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
-            />
-          </div>
-        </div>
-
-        {/* Pre-Buy Error Message */}
-        {preBuyError && (
-          <div className="p-4 bg-red-900/20 border border-red-700 rounded-lg">
-            <p className="text-red-400 text-sm">{preBuyError}</p>
-          </div>
-        )}
-
-        {/* Pre-Buy Action Buttons */}
-        <div className="flex gap-3">
-          <Button onClick={calculatePreBuy} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
-            Calculate Pre-Buy 💰
-          </Button>
-          <Button
-            onClick={resetPreBuy}
-            variant="outline"
-            className="border-slate-600 text-slate-300 hover:bg-slate-700 bg-transparent"
-          >
-            Reset
-          </Button>
-        </div>
-
-        {/* Pre-Buy Results Section */}
-        {preBuyResult && (
-          <div className="space-y-3 p-6 bg-slate-700 rounded-lg border border-slate-600">
-            <h3 className="text-lg font-semibold text-white mb-4">🎯 Pre-Buy Plan</h3>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 bg-slate-600 rounded">
-                <p className="text-xs text-slate-400 mb-1">Price Per Token</p>
-                <p className="text-lg font-bold text-white">${preBuyResult.pricePerToken.toFixed(2)}</p>
+            {saveMessage && (
+              <div className="p-4 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 rounded-lg">
+                <p className="text-green-600 dark:text-green-400 text-sm font-medium">{saveMessage}</p>
               </div>
+            )}
 
-              <div className="p-3 bg-slate-600 rounded">
-                <p className="text-xs text-slate-400 mb-1">Total Budget</p>
-                <p className="text-lg font-bold text-white">${preBuyResult.totalCost.toFixed(2)}</p>
-              </div>
-
-              <div className="p-3 bg-blue-900/30 rounded col-span-2">
-                <p className="text-xs text-slate-400 mb-1">Tokens You Can Buy</p>
-                <p className="text-2xl font-bold text-blue-400">{preBuyResult.tokensToBuy.toFixed(6)}</p>
-              </div>
-            </div>
-
-            <div className="mt-4 p-3 bg-slate-600 rounded text-sm text-slate-300">
-              <p>
-                With a budget of <span className="font-semibold text-white">${preBuyResult.totalCost.toFixed(2)}</span>{" "}
-                at <span className="font-semibold text-white">${preBuyResult.pricePerToken.toFixed(2)}</span> per token,
-                you can buy <span className="font-semibold text-blue-400">{preBuyResult.tokensToBuy.toFixed(6)}</span>{" "}
-                tokens.
-              </p>
-            </div>
+            {walletAddress && (
+              <Button
+                onClick={handleSaveCalculation}
+                className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
+              >
+                Save to Profile
+              </Button>
+            )}
           </div>
         )}
       </div>
