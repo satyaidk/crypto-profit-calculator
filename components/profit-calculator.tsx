@@ -167,7 +167,7 @@ export function ProfitCalculator({ walletAddress }: { walletAddress?: string | n
             <div className="flex gap-2 mt-2 flex-col sm:flex-row">
               <Input
                 id="token-name"
-                placeholder="e.g., Ethereum, Bitcoin, solana"
+                placeholder="e.g., Ethereum, Bitcoin, Solana, Polygon"
                 value={tokenName}
                 onChange={(e) => setTokenName(e.target.value)}
                 className="bg-secondary border-border text-foreground placeholder:text-muted-foreground flex-1"
