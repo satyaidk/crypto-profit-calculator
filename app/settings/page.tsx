@@ -1,7 +1,6 @@
-"use client"
+ "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,7 +9,6 @@ import { Card } from "@/components/ui/card"
 import { getUserProfile, createOrUpdateUserProfile } from "@/lib/user-storage"
 
 export default function SettingsPage() {
-  const router = useRouter()
   const [isConnected, setIsConnected] = useState(false)
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
@@ -102,6 +100,7 @@ export default function SettingsPage() {
                     {pfpUrl && (
                       <div className="mt-4">
                         <p className="text-xs text-muted-foreground mb-2">Preview:</p>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={pfpUrl || "/placeholder.svg"}
                           alt="Profile preview"

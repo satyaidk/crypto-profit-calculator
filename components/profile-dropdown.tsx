@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
-import { getUserProfile } from "@/lib/user-storage"
+import { getUserProfile, type UserProfile } from "@/lib/user-storage"
 
 interface ProfileDropdownProps {
   walletAddress: string | null
@@ -11,7 +11,7 @@ interface ProfileDropdownProps {
 
 export function ProfileDropdown({ walletAddress, onDisconnect }: ProfileDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [profile, setProfile] = useState<any>(null)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -41,6 +41,7 @@ export function ProfileDropdown({ walletAddress, onDisconnect }: ProfileDropdown
         className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-secondary hover:bg-secondary/80 transition-colors"
       >
         {profile?.pfpUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img src={profile.pfpUrl || "/placeholder.svg"} alt="Profile" className="w-6 h-6 rounded-full object-cover" />
         ) : (
           <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground">

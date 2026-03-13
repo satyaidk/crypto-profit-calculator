@@ -1,6 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
+
+interface EthereumProvider {
+  request: (args: { method: string }) => Promise<string[]>
+}
 import { Button } from "@/components/ui/button"
 
 interface WalletConnectorProps {
@@ -17,14 +21,11 @@ export function WalletConnector({ onConnect, onDisconnect, compact = false }: Wa
   const [isSigningIn, setIsSigningIn] = useState(false)
 
   // Check if wallet is already connected on mount
-  useEffect(() => {
-    checkWalletConnection()
-  }, [])
-
-  const checkWalletConnection = async () => {
+  const checkWalletConnection = useCallback(async () => {
     try {
-      if (typeof window !== "undefined" && (window as any).ethereum) {
-        const accounts = await (window as any).ethereum.request({
+      const ethereum = typeof window !== "undefined" ? (window as unknown as { ethereum?: EthereumProvider }).ethereum : undefined
+      if (ethereum) {
+        const accounts = await ethereum.request({
           method: "eth_accounts",
         })
         if (accounts.length > 0) {
@@ -36,21 +37,26 @@ export function WalletConnector({ onConnect, onDisconnect, compact = false }: Wa
     } catch (err) {
       console.error("Error checking wallet connection:", err)
     }
-  }
+  }, [onConnect])
+
+  useEffect(() => {
+    void checkWalletConnection()
+  }, [checkWalletConnection])
 
   const connectWallet = async () => {
     setIsLoading(true)
     setError(null)
 
     try {
-      if (typeof window === "undefined" || !(window as any).ethereum) {
+      const ethereum = typeof window !== "undefined" ? (window as unknown as { ethereum?: EthereumProvider }).ethereum : undefined
+      if (!ethereum) {
         setError("MetaMask or Web3 wallet not detected. Please install one.")
         setIsLoading(false)
         return
       }
 
       // Request account access
-      const accounts = await (window as any).ethereum.request({
+      const accounts = await ethereum.request({
         method: "eth_requestAccounts",
       })
 
@@ -66,9 +72,10 @@ export function WalletConnector({ onConnect, onDisconnect, compact = false }: Wa
         setIsSigningIn(false)
         onConnect(userAddress)
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorWithCode = err as { code?: number }
       setIsSigningIn(false)
-      if (err.code === 4001) {
+      if (errorWithCode.code === 4001) {
         setError("Connection rejected by user")
       } else {
         setError("Failed to connect wallet")

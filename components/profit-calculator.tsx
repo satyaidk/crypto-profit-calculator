@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { saveCalculation } from "@/lib/user-storage"
+import { saveCalculation, type SavedCalculation } from "@/lib/user-storage"
 
 interface CalculationResult {
   currentValue: number
@@ -127,11 +127,18 @@ export function ProfitCalculator({ walletAddress }: { walletAddress?: string | n
   const handleSaveCalculation = () => {
     if (!walletAddress || !result) return
 
+    const resultForStorage: SavedCalculation["result"] = {
+      currentValue: result.currentValue,
+      futureValue: result.futureValue,
+      profit: result.profit,
+      percentageGain: result.percentageGain,
+    }
+
     saveCalculation(
       walletAddress,
       "profit",
       { tokenName, holdings, currentPrice, targetPrice },
-      result,
+      resultForStorage,
       `${tokenName} - ${new Date().toLocaleDateString()}`,
     )
 

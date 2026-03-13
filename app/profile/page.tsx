@@ -9,16 +9,18 @@ import {
   getSavedCalculations,
   deleteSavedCalculation,
   clearAllSavedCalculations,
+  type UserProfile,
+  type SavedCalculation,
 } from "@/lib/user-storage"
 
 export default function ProfilePage() {
   const [isConnected, setIsConnected] = useState(false)
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
-  const [profile, setProfile] = useState<any>(null)
-  const [savedCalculations, setSavedCalculations] = useState<any[]>([])
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [savedCalculations, setSavedCalculations] = useState<SavedCalculation[]>([])
   const [showClearConfirm, setShowClearConfirm] = useState(false)
-  const [selectedCalculation, setSelectedCalculation] = useState<any>(null)
+  const [selectedCalculation, setSelectedCalculation] = useState<SavedCalculation | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -51,26 +53,54 @@ export default function ProfilePage() {
     }
   }
 
-  const renderCalculationDetails = (calc: any) => {
+  const renderCalculationDetails = (calc: SavedCalculation) => {
+    const data = calc.data as {
+      tokenName?: string
+      holdings?: string
+      currentPrice?: number | string
+      targetPrice?: number | string
+      fromToken?: string
+      toToken?: string
+      fromPrice?: number | string
+      toPrice?: number | string
+      budget?: number | string
+    }
+    const result = calc.result as {
+      currentValue?: number
+      futureValue?: number
+      profit?: number
+      percentageGain?: number
+      fromAmount?: number
+      fromToken?: string
+      toAmount?: number
+      toToken?: string
+      exchangeRate?: number
+      tokensToBuy?: number
+      pricePerToken?: number
+    }
     if (calc.type === "profit") {
       return (
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 bg-background border border-border rounded-lg">
               <p className="text-xs text-muted-foreground mb-2 font-semibold">Token Name</p>
-              <p className="text-lg font-bold text-foreground">{calc.data.tokenName}</p>
+              <p className="text-lg font-bold text-foreground">{data.tokenName}</p>
             </div>
             <div className="p-4 bg-background border border-border rounded-lg">
               <p className="text-xs text-muted-foreground mb-2 font-semibold">Holdings</p>
-              <p className="text-lg font-bold text-foreground">{calc.data.holdings}</p>
+              <p className="text-lg font-bold text-foreground">{data.holdings}</p>
             </div>
             <div className="p-4 bg-background border border-border rounded-lg">
               <p className="text-xs text-muted-foreground mb-2 font-semibold">Current Price</p>
-              <p className="text-lg font-bold text-foreground">${Number(calc.data.currentPrice).toFixed(2)}</p>
+              <p className="text-lg font-bold text-foreground">
+                ${Number(data.currentPrice ?? 0).toFixed(2)}
+              </p>
             </div>
             <div className="p-4 bg-background border border-border rounded-lg">
               <p className="text-xs text-muted-foreground mb-2 font-semibold">Target Price</p>
-              <p className="text-lg font-bold text-foreground">${Number(calc.data.targetPrice).toFixed(2)}</p>
+              <p className="text-lg font-bold text-foreground">
+                ${Number(data.targetPrice ?? 0).toFixed(2)}
+              </p>
             </div>
           </div>
 
@@ -79,30 +109,30 @@ export default function ProfilePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="p-4 bg-background border border-border rounded-lg">
                 <p className="text-xs text-muted-foreground mb-2 font-semibold">Current Value</p>
-                <p className="text-2xl font-bold text-foreground">${calc.result.currentValue.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-foreground">${(result.currentValue ?? 0).toFixed(2)}</p>
               </div>
               <div className="p-4 bg-background border border-border rounded-lg">
                 <p className="text-xs text-muted-foreground mb-2 font-semibold">Future Value</p>
-                <p className="text-2xl font-bold text-foreground">${calc.result.futureValue.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-foreground">${(result.futureValue ?? 0).toFixed(2)}</p>
               </div>
               <div
-                className={`p-4 rounded-lg border ${calc.result.profit >= 0 ? "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900" : "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900"}`}
+                className={`p-4 rounded-lg border ${(result.profit ?? 0) >= 0 ? "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900" : "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900"}`}
               >
                 <p className="text-xs text-muted-foreground mb-2 font-semibold">Profit/Loss</p>
                 <p
-                  className={`text-2xl font-bold ${calc.result.profit >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                  className={`text-2xl font-bold ${(result.profit ?? 0) >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
                 >
-                  ${calc.result.profit.toFixed(2)}
+                  ${(result.profit ?? 0).toFixed(2)}
                 </p>
               </div>
               <div
-                className={`p-4 rounded-lg border ${calc.result.percentageGain >= 0 ? "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900" : "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900"}`}
+                className={`p-4 rounded-lg border ${(result.percentageGain ?? 0) >= 0 ? "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900" : "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900"}`}
               >
                 <p className="text-xs text-muted-foreground mb-2 font-semibold">Percentage Gain</p>
                 <p
-                  className={`text-2xl font-bold ${calc.result.percentageGain >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                  className={`text-2xl font-bold ${(result.percentageGain ?? 0) >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
                 >
-                  {calc.result.percentageGain.toFixed(2)}%
+                  {(result.percentageGain ?? 0).toFixed(2)}%
                 </p>
               </div>
             </div>
@@ -115,19 +145,23 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 bg-background border border-border rounded-lg">
               <p className="text-xs text-muted-foreground mb-2 font-semibold">From Token</p>
-              <p className="text-lg font-bold text-foreground">{calc.data.fromToken}</p>
+              <p className="text-lg font-bold text-foreground">{data.fromToken}</p>
             </div>
             <div className="p-4 bg-background border border-border rounded-lg">
               <p className="text-xs text-muted-foreground mb-2 font-semibold">To Token</p>
-              <p className="text-lg font-bold text-foreground">{calc.data.toToken}</p>
+              <p className="text-lg font-bold text-foreground">{data.toToken}</p>
             </div>
             <div className="p-4 bg-background border border-border rounded-lg">
               <p className="text-xs text-muted-foreground mb-2 font-semibold">From Price</p>
-              <p className="text-lg font-bold text-foreground">${Number(calc.data.fromPrice).toFixed(2)}</p>
+              <p className="text-lg font-bold text-foreground">
+                ${Number(data.fromPrice ?? 0).toFixed(2)}
+              </p>
             </div>
             <div className="p-4 bg-background border border-border rounded-lg">
               <p className="text-xs text-muted-foreground mb-2 font-semibold">To Price</p>
-              <p className="text-lg font-bold text-foreground">${Number(calc.data.toPrice).toFixed(2)}</p>
+              <p className="text-lg font-bold text-foreground">
+                ${Number(data.toPrice ?? 0).toFixed(2)}
+              </p>
             </div>
           </div>
 
@@ -137,21 +171,21 @@ export default function ProfilePage() {
               <div className="p-4 bg-background border border-border rounded-lg">
                 <p className="text-xs text-muted-foreground mb-2 font-semibold">You Send</p>
                 <p className="text-lg font-bold text-foreground">
-                  {calc.result.fromAmount.toFixed(6)} {calc.result.fromToken.toUpperCase()}
+                  {(result.fromAmount ?? 0).toFixed(6)} {result.fromToken?.toUpperCase()}
                 </p>
               </div>
               <div className="p-4 bg-background border border-border rounded-lg">
                 <p className="text-xs text-muted-foreground mb-2 font-semibold">You Receive</p>
                 <p className="text-lg font-bold text-accent">
-                  {calc.result.toAmount.toFixed(6)} {calc.result.toToken.toUpperCase()}
+                  {(result.toAmount ?? 0).toFixed(6)} {result.toToken?.toUpperCase()}
                 </p>
               </div>
             </div>
             <div className="p-4 bg-background border border-border rounded-lg mt-4">
               <p className="text-xs text-muted-foreground mb-2 font-semibold">Exchange Rate</p>
               <p className="text-lg font-bold text-foreground">
-                1 {calc.result.fromToken.toUpperCase()} = {calc.result.exchangeRate.toFixed(6)}{" "}
-                {calc.result.toToken.toUpperCase()}
+                1 {result.fromToken?.toUpperCase()} = {(result.exchangeRate ?? 0).toFixed(6)}{" "}
+                {result.toToken?.toUpperCase()}
               </p>
             </div>
           </div>
@@ -163,15 +197,19 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 bg-background border border-border rounded-lg">
               <p className="text-xs text-muted-foreground mb-2 font-semibold">Token Name</p>
-              <p className="text-lg font-bold text-foreground">{calc.data.tokenName}</p>
+              <p className="text-lg font-bold text-foreground">{data.tokenName}</p>
             </div>
             <div className="p-4 bg-background border border-border rounded-lg">
               <p className="text-xs text-muted-foreground mb-2 font-semibold">Target Buy Price</p>
-              <p className="text-lg font-bold text-foreground">${Number(calc.data.targetBuyPrice).toFixed(2)}</p>
+              <p className="text-lg font-bold text-foreground">
+                ${Number(data.targetPrice ?? 0).toFixed(2)}
+              </p>
             </div>
             <div className="p-4 bg-background border border-border rounded-lg">
               <p className="text-xs text-muted-foreground mb-2 font-semibold">Budget</p>
-              <p className="text-lg font-bold text-foreground">${Number(calc.data.budget).toFixed(2)}</p>
+              <p className="text-lg font-bold text-foreground">
+                ${Number(data.budget ?? 0).toFixed(2)}
+              </p>
             </div>
           </div>
 
@@ -180,11 +218,13 @@ export default function ProfilePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="p-4 bg-background border border-border rounded-lg">
                 <p className="text-xs text-muted-foreground mb-2 font-semibold">Tokens You Can Buy</p>
-                <p className="text-2xl font-bold text-accent">{calc.result.tokensCanBuy.toFixed(6)}</p>
+                <p className="text-2xl font-bold text-accent">{(result.tokensToBuy ?? 0).toFixed(6)}</p>
               </div>
               <div className="p-4 bg-background border border-border rounded-lg">
                 <p className="text-xs text-muted-foreground mb-2 font-semibold">Price Per Token</p>
-                <p className="text-lg font-bold text-foreground">${calc.result.pricePerToken.toFixed(2)}</p>
+                <p className="text-lg font-bold text-foreground">
+                  ${(result.pricePerToken ?? 0).toFixed(2)}
+                </p>
               </div>
             </div>
           </div>
@@ -216,6 +256,7 @@ export default function ProfilePage() {
               <div className="p-6 md:p-8">
                 <div className="flex items-center gap-6 mb-6">
                   {profile?.pfpUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={profile.pfpUrl || "/placeholder.svg"}
                       alt="Profile"

@@ -1,1 +1,1 @@
-# Crypto profit calculator
+# CPC
