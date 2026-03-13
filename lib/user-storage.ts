@@ -9,8 +9,8 @@ export interface UserProfile {
 export interface SavedCalculation {
   id: string
   type: "profit" | "swap" | "prebuy"
-  data: Record<string, any>
-  result: Record<string, any>
+  data: Record<string, unknown>
+  result: Record<string, unknown>
   createdAt: string
   name?: string
 }
@@ -57,8 +57,8 @@ export function getSavedCalculations(walletAddress: string): SavedCalculation[] 
 export function saveCalculation(
   walletAddress: string,
   type: "profit" | "swap" | "prebuy",
-  data: Record<string, any>,
-  result: Record<string, any>,
+  data: Record<string, unknown>,
+  result: Record<string, unknown>,
   name?: string,
 ): SavedCalculation {
   if (typeof window === "undefined") throw new Error("Storage not available")
