@@ -167,7 +167,7 @@ export default function ProfilePage() {
             </div>
             <div className="p-4 bg-background border border-border rounded-lg">
               <p className="text-xs text-muted-foreground mb-2 font-semibold">Target Buy Price</p>
-              <p className="text-lg font-bold text-foreground">${Number(calc.data.targetBuyPrice).toFixed(2)}</p>
+              <p className="text-lg font-bold text-foreground">${Number(calc.data.targetPrice).toFixed(2)}</p>
             </div>
             <div className="p-4 bg-background border border-border rounded-lg">
               <p className="text-xs text-muted-foreground mb-2 font-semibold">Budget</p>
@@ -180,7 +180,7 @@ export default function ProfilePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="p-4 bg-background border border-border rounded-lg">
                 <p className="text-xs text-muted-foreground mb-2 font-semibold">Tokens You Can Buy</p>
-                <p className="text-2xl font-bold text-accent">{calc.result.tokensCanBuy.toFixed(6)}</p>
+                <p className="text-2xl font-bold text-accent">{calc.result.tokensToBuy.toFixed(6)}</p>
               </div>
               <div className="p-4 bg-background border border-border rounded-lg">
                 <p className="text-xs text-muted-foreground mb-2 font-semibold">Price Per Token</p>
