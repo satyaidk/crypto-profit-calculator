@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { ArrowLeftRight, Loader2, Info, CheckCircle2, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -66,43 +68,34 @@ export function SwapCalculator() {
         setFromPrice(data[fromToken.toLowerCase()].usd.toString())
         setToPrice(data[toToken.toLowerCase()].usd.toString())
       } else {
-        setError("One or both tokens not found. Please check the names.")
+        setError("One or both tokens not found. Use full names like 'ethereum', 'bitcoin'.")
       }
-    } catch (err) {
+    } catch {
       setError("Failed to fetch token prices. Please try again.")
-      console.error("Price fetch error:", err)
     } finally {
       setIsLoadingPrice(false)
     }
   }
 
+  const handleSwapTokens = () => {
+    setFromToken(toToken)
+    setToToken(fromToken)
+    setFromPrice(toPrice)
+    setToPrice(fromPrice)
+  }
+
   const calculateSwap = async () => {
     setError(null)
-    setResult(null)
 
-    if (!fromToken.trim() || !toToken.trim()) {
-      setError("Please enter both token names")
-      return
-    }
+    if (!fromToken.trim() || !toToken.trim()) return setError("Please enter both token names")
 
     const fromAmountNum = Number.parseFloat(fromAmount)
     const fromPriceNum = Number.parseFloat(fromPrice)
     const toPriceNum = Number.parseFloat(toPrice)
 
-    if (isNaN(fromAmountNum) || fromAmountNum <= 0) {
-      setError("Please enter a valid amount")
-      return
-    }
-
-    if (isNaN(fromPriceNum) || fromPriceNum <= 0) {
-      setError("Please enter a valid from price")
-      return
-    }
-
-    if (isNaN(toPriceNum) || toPriceNum <= 0) {
-      setError("Please enter a valid to price")
-      return
-    }
+    if (isNaN(fromAmountNum) || fromAmountNum <= 0) return setError("Please enter a valid amount")
+    if (isNaN(fromPriceNum) || fromPriceNum <= 0) return setError("Please enter a valid 'From' price")
+    if (isNaN(toPriceNum) || toPriceNum <= 0) return setError("Please enter a valid 'To' price")
 
     setIsCalculating(true)
     await new Promise((resolve) => setTimeout(resolve, 800))
@@ -133,170 +126,149 @@ export function SwapCalculator() {
   }
 
   return (
-    <div className="space-y-6 animate-slide-up">
-      <div>
-        <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Swap Calculator</h2>
-        <p className="text-sm text-muted-foreground mt-1">Check token conversion rates before swapping</p>
-      </div>
+    <div className="space-y-8 w-full max-w-3xl mx-auto py-4">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="glass-card rounded-3xl p-6 md:p-10 shadow-lg relative overflow-hidden group border border-white/10"
+      >
+        <div className="absolute -top-32 -left-32 w-64 h-64 bg-accent/20 rounded-full mix-blend-screen filter blur-[80px] pointer-events-none"></div>
 
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="from-token" className="text-foreground font-semibold">
-              From Token
-            </Label>
-            <Input
-              id="from-token"
-              placeholder="e.g., ethereum"
-              value={fromToken}
-              onChange={(e) => setFromToken(e.target.value)}
-              className="mt-2 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="to-token" className="text-foreground font-semibold">
-              To Token
-            </Label>
-            <Input
-              id="to-token"
-              placeholder="e.g., bitcoin"
-              value={toToken}
-              onChange={(e) => setToToken(e.target.value)}
-              className="mt-2 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
-            />
-          </div>
+        <div className="text-center md:text-left mb-10">
+          <h2 className="text-4xl md:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-accent to-primary">Token Swap.</h2>
+          <p className="text-muted-foreground mt-2 font-medium tracking-wide">Estimate accurate exchange rates and output tokens instantly.</p>
         </div>
 
-        <div>
+        <div className="space-y-8 relative z-10 w-full">
+          
+          <div className="flex flex-col md:flex-row gap-4 items-end">
+            <div className="flex-1 space-y-2 w-full">
+              <Label className="font-semibold text-foreground/80 pl-1 uppercase text-xs tracking-wider">From Asset</Label>
+              <Input
+                placeholder="e.g., ethereum"
+                value={fromToken}
+                onChange={(e) => setFromToken(e.target.value)}
+                className="bg-background/50 h-14 backdrop-blur-md rounded-xl text-lg font-semibold border-white/10 focus:border-accent"
+              />
+            </div>
+
+            <motion.div whileHover={{ scale: 1.1, rotate: 180 }} whileTap={{ scale: 0.9 }} className="mx-auto md:mx-2 md:mb-2 z-10">
+              <Button onClick={handleSwapTokens} size="icon" variant="outline" className="w-12 h-12 rounded-full border-white/20 bg-card hover:bg-accent hover:text-white transition-all shadow-lg">
+                <ArrowLeftRight className="w-5 h-5" />
+              </Button>
+            </motion.div>
+
+            <div className="flex-1 space-y-2 w-full">
+              <Label className="font-semibold text-foreground/80 pl-1 uppercase text-xs tracking-wider">To Asset</Label>
+              <Input
+                placeholder="e.g., solana"
+                value={toToken}
+                onChange={(e) => setToToken(e.target.value)}
+                className="bg-background/50 h-14 backdrop-blur-md rounded-xl text-lg font-semibold border-white/10 focus:border-accent"
+              />
+            </div>
+          </div>
+
+          <motion.div whileHover={{ scale: 1.01 }} className="w-full">
+            <Button
+              onClick={fetchTokenPrices}
+              disabled={isLoadingPrice}
+              className="w-full h-12 bg-white/5 hover:bg-white/10 border border-white/10 text-foreground transition-all rounded-xl"
+            >
+              {isLoadingPrice ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : "Fetch Current Cloud Prices"}
+            </Button>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-black/5 dark:bg-white/5 p-4 rounded-2xl border border-white/5 shadow-inner">
+            <div className="space-y-1">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest pl-1">Amount to Swap</Label>
+              <Input type="number" placeholder="0.00" value={fromAmount} onChange={(e) => setFromAmount(e.target.value)} className="bg-transparent border-0 border-b border-foreground/10 rounded-none focus-visible:ring-0 focus-visible:border-accent px-1 text-2xl font-mono" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest pl-1">{fromToken ? fromToken : "From"} Price ($)</Label>
+              <Input type="number" placeholder="0.00" value={fromPrice} onChange={(e) => setFromPrice(e.target.value)} className="bg-transparent border-0 border-b border-foreground/10 rounded-none focus-visible:ring-0 focus-visible:border-accent px-1 text-2xl font-mono" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest pl-1">{toToken ? toToken : "To"} Price ($)</Label>
+              <Input type="number" placeholder="0.00" value={toPrice} onChange={(e) => setToPrice(e.target.value)} className="bg-transparent border-0 border-b border-foreground/10 rounded-none focus-visible:ring-0 focus-visible:border-accent px-1 text-2xl font-mono" />
+            </div>
+          </div>
+          
+        </div>
+
+        <AnimatePresence>
+          {error && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }} className="mt-6 text-destructive-foreground bg-destructive/20 border border-destructive/30 rounded-xl p-4 flex text-sm items-center gap-3">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" /> <span className="font-semibold">{error}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="flex flex-col sm:flex-row gap-4 mt-8">
           <Button
-            onClick={fetchTokenPrices}
-            disabled={isLoadingPrice}
-            className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+            onClick={calculateSwap}
+            disabled={isCalculating}
+            className="flex-1 h-14 rounded-xl bg-gradient-to-r from-accent to-primary hover:opacity-90 transition-opacity text-primary-foreground font-black text-lg shadow-[0_4px_20px_var(--primary)] shadow-accent/20"
           >
-            {isLoadingPrice ? (
-              <span className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin-slow"></div>
-                Fetching Prices...
-              </span>
-            ) : (
-              "Fetch Prices"
-            )}
+            {isCalculating ? <Loader2 className="w-6 h-6 mr-2 animate-spin" /> : "Preview Swap Route"}
+          </Button>
+          <Button onClick={resetCalculator} variant="outline" className="h-14 px-8 rounded-xl border-white/20 hover:bg-white/10 bg-transparent text-foreground backdrop-blur-md font-bold">
+            Clear
           </Button>
         </div>
+      </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <Label htmlFor="from-amount" className="text-foreground font-semibold">
-              Amount
-            </Label>
-            <Input
-              id="from-amount"
-              type="number"
-              placeholder="e.g., 1.5"
-              value={fromAmount}
-              onChange={(e) => setFromAmount(e.target.value)}
-              step="0.0001"
-              className="mt-2 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="from-price" className="text-foreground font-semibold">
-              From Price ($)
-            </Label>
-            <Input
-              id="from-price"
-              type="number"
-              placeholder="e.g., 2500"
-              value={fromPrice}
-              onChange={(e) => setFromPrice(e.target.value)}
-              step="0.01"
-              className="mt-2 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="to-price" className="text-foreground font-semibold">
-              To Price ($)
-            </Label>
-            <Input
-              id="to-price"
-              type="number"
-              placeholder="e.g., 45000"
-              value={toPrice}
-              onChange={(e) => setToPrice(e.target.value)}
-              step="0.01"
-              className="mt-2 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
-            />
-          </div>
-        </div>
-      </div>
-
-      {error && (
-        <div className="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg animate-slide-up">
-          <p className="text-red-600 dark:text-red-400 text-sm font-medium">{error}</p>
-        </div>
-      )}
-
-      <div className="flex gap-3 flex-col sm:flex-row">
-        <Button
-          onClick={calculateSwap}
-          disabled={isCalculating}
-          className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
-        >
-          {isCalculating ? (
-            <span className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin-slow"></div>
-              Calculating...
-            </span>
-          ) : (
-            "Calculate Swap"
-          )}
-        </Button>
-        <Button
-          onClick={resetCalculator}
-          variant="outline"
-          className="border-border text-foreground hover:bg-secondary bg-transparent"
-        >
-          Reset
-        </Button>
-      </div>
-
-      {result && (
-        <div className="space-y-4 p-6 bg-secondary border border-border rounded-lg animate-slide-up">
-          <h3 className="text-lg font-bold text-foreground">Swap Preview</h3>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-4 bg-background border border-border rounded-lg">
-              <p className="text-xs text-muted-foreground mb-2 font-semibold">You Send</p>
-              <p className="text-2xl font-bold text-foreground">
-                {result.fromAmount.toFixed(6)} {result.fromToken.toUpperCase()}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                ${(result.fromAmount * (Number.parseFloat(fromPrice) || 0)).toFixed(2)}
-              </p>
+      <AnimatePresence>
+        {result && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-card rounded-3xl p-6 md:p-8 shadow-2xl overflow-hidden relative border border-white/20"
+          >
+            <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+              <ArrowLeftRight className="w-48 h-48" />
             </div>
 
-            <div className="p-4 bg-background border border-border rounded-lg">
-              <p className="text-xs text-muted-foreground mb-2 font-semibold">You Receive</p>
-              <p className="text-2xl font-bold text-accent">
-                {result.toAmount.toFixed(6)} {result.toToken.toUpperCase()}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                ${(result.toAmount * (Number.parseFloat(toPrice) || 0)).toFixed(2)}
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center text-accent">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-2xl font-bold text-foreground">Swap Estimate</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+              <div className="glass p-6 rounded-2xl border-l-4 border-l-muted text-left shadow-lg bg-background/40">
+                <p className="text-sm text-muted-foreground uppercase font-bold tracking-widest mb-1 flex items-center gap-2"><ArrowLeftRight className="w-4 h-4 opacity-50"/> Pay With</p>
+                <div className="text-3xl font-black mt-2">
+                  <span className="text-foreground">{result.fromAmount.toLocaleString()}</span> <span className="opacity-50 text-xl">{result.fromToken.toUpperCase()}</span>
+                </div>
+                <p className="text-sm font-medium mt-2 text-foreground/50">
+                  ≈ ${(result.fromAmount * (Number.parseFloat(fromPrice) || 0)).toLocaleString(undefined, {minimumFractionDigits: 2})} USD
+                </p>
+              </div>
+
+              <div className="glass p-6 rounded-2xl border-l-4 border-l-accent text-left shadow-lg bg-accent/5 backdrop-blur-md">
+                <p className="text-sm text-accent uppercase font-bold tracking-widest mb-1 flex items-center gap-2"><CheckCircle2 className="w-4 h-4 opacity-50"/> You Will Receive</p>
+                <div className="text-3xl font-black mt-2">
+                  <span className="text-accent">{result.toAmount.toLocaleString(undefined, {maximumFractionDigits: 6})}</span> <span className="opacity-50 text-xl text-accent/80">{result.toToken.toUpperCase()}</span>
+                </div>
+                <p className="text-sm font-medium mt-2 text-foreground/50">
+                  ≈ ${(result.toAmount * (Number.parseFloat(toPrice) || 0)).toLocaleString(undefined, {minimumFractionDigits: 2})} USD
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 p-4 rounded-xl flex items-center justify-between border border-white/5 bg-black/10 dark:bg-white/5 relative z-10">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
+                <Info className="w-4 h-4" /> Exchange Rate
+              </div>
+              <p className="font-mono text-foreground font-bold text-sm md:text-base">
+                1 {result.fromToken.toUpperCase()} = {result.exchangeRate.toLocaleString(undefined, {maximumFractionDigits: 6})} {result.toToken.toUpperCase()}
               </p>
             </div>
-          </div>
-
-          <div className="p-4 bg-background border border-border rounded-lg">
-            <p className="text-xs text-muted-foreground mb-2 font-semibold">Exchange Rate</p>
-            <p className="text-lg font-bold text-foreground">
-              1 {result.fromToken.toUpperCase()} = {result.exchangeRate.toFixed(6)} {result.toToken.toUpperCase()}
-            </p>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
